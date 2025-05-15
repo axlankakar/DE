@@ -35,7 +35,7 @@ services:
     image: bitnami/spark:latest
     environment:
       - SPARK_MODE=worker
-      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_MASTER_URL=spark://spark-master:7087
       - SPARK_WORKER_MEMORY=2G
       - SPARK_WORKER_CORES=2
       - SPARK_EXTRA_OPTS=--packages org.postgresql:postgresql:42.2.18,org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.2
@@ -70,9 +70,13 @@ services:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    user: "0:0"  # Run as root temporarily
     volumes:
       - ./airflow:/opt/airflow
     command: bash -c "
+      mkdir -p /opt/airflow/logs /opt/airflow/dags /opt/airflow/plugins &&
+      chown -R airflow:root /opt/airflow &&
+      chmod -R 777 /opt/airflow &&
       airflow db init &&
       airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com
       "
