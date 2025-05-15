@@ -1,0 +1,18 @@
+# Kafka
+kafka-python==2.0.2
+
+# Spark
+pyspark==3.2.0
+findspark==2.0.1
+
+# Airflow
+apache-airflow==2.7.1
+apache-airflow-providers-apache-spark==4.1.1
+
+# Database
+psycopg2-binary==2.9.9
+SQLAlchemy==1.4.49
+
+# Utilities
+python-dateutil==2.8.2
+pytz==2023.3 
