@@ -7,7 +7,7 @@ COPY data_generator/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application
-COPY data_generator/generate_stock_data.py .
+COPY data_generator/ .
 
 # Run the generator
-CMD ["python", "generate_stock_data.py"] 
+CMD ["python", "stock_generator.py"] 

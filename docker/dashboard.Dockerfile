@@ -16,7 +16,7 @@ COPY dashboard/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy dashboard application
-COPY dashboard/app.py .
+COPY dashboard/ .
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
@@ -31,4 +31,7 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8050/ || exit 1
 
 # Command to run the application with gunicorn
-CMD ["gunicorn", "--workers=2", "--threads=2", "--bind=0.0.0.0:8050", "--timeout=120", "app:server"] 
+CMD ["gunicorn", "--workers=2", "--threads=2", "--bind=0.0.0.0:8050", "--timeout=120", "app:server"]
+
+# Command to run the application with python
+CMD ["python", "app.py"] 

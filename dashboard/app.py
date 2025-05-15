@@ -8,30 +8,35 @@ from datetime import datetime, timedelta
 import os
 import time
 from sqlalchemy.exc import OperationalError
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Initialize the Dash app with a modern theme
 app = dash.Dash(__name__, 
     external_stylesheets=[
-        'https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap'
+        'https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap',
+        'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css'
     ],
-    serve_locally=True,
     meta_tags=[
         {"name": "viewport", "content": "width=device-width, initial-scale=1"}
     ]
 )
 
-# Enable the app to be embedded in an iframe and expose server for gunicorn
-app.enable_dev_tools(debug=False)
+# Enable the app to be embedded in an iframe
+app.config.suppress_callback_exceptions = True
 server = app.server  # Expose Flask server for gunicorn
 
-# Get database connection details from environment variables
+# Get database connection details from environment variables with defaults
 DB_USER = os.getenv('POSTGRES_USER', 'airflow')
 DB_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'airflow')
 DB_HOST = os.getenv('POSTGRES_HOST', 'postgres')
 DB_PORT = os.getenv('POSTGRES_PORT', '5432')
 DB_NAME = os.getenv('POSTGRES_DB', 'stockdata')
 
-print(f"Attempting to connect to database: postgresql://{DB_USER}:***@{DB_HOST}:{DB_PORT}/{DB_NAME}")
+logger.info(f"Attempting to connect to database: postgresql://{DB_USER}:***@{DB_HOST}:{DB_PORT}/{DB_NAME}")
 
 # Create database connection with retry logic
 def get_db_engine(max_retries=5, retry_interval=5):
@@ -41,22 +46,22 @@ def get_db_engine(max_retries=5, retry_interval=5):
             # Test the connection
             with engine.connect() as conn:
                 conn.execute(text("SELECT 1"))
-            print(f"Successfully connected to database {DB_NAME}")
+            logger.info(f"Successfully connected to database {DB_NAME}")
             return engine
         except OperationalError as e:
-            print(f"Database connection attempt {attempt + 1} failed: {str(e)}")
+            logger.error(f"Database connection attempt {attempt + 1} failed: {str(e)}")
             if attempt < max_retries - 1:
-                print(f"Retrying in {retry_interval} seconds...")
+                logger.info(f"Retrying in {retry_interval} seconds...")
                 time.sleep(retry_interval)
             else:
-                print(f"Failed to connect to database after {max_retries} attempts")
+                logger.error(f"Failed to connect to database after {max_retries} attempts")
                 raise e
 
 # Create database connection
 try:
     engine = get_db_engine()
 except Exception as e:
-    print(f"Failed to connect to database: {str(e)}")
+    logger.error(f"Failed to connect to database: {str(e)}")
     engine = None
 
 # Styles
@@ -131,6 +136,18 @@ app.layout = html.Div([
 ], style={'backgroundColor': COLORS['background'], 'minHeight': '100vh'})
 
 def create_figure(df, x, y, title, type='scatter', color=COLORS['primary']):
+    if df.empty:
+        return go.Figure().update_layout(
+            title=title,
+            annotations=[{
+                'text': 'No data available',
+                'xref': 'paper',
+                'yref': 'paper',
+                'showarrow': False,
+                'font': {'size': 20}
+            }]
+        )
+    
     fig = go.Figure()
     
     if type == 'scatter':
@@ -205,6 +222,7 @@ def update_graphs(selected_stock, time_range, n):
         )
         
         if df.empty:
+            logger.warning(f"No data available for {selected_stock}")
             return html.Div(f"No data available for {selected_stock}", 
                           style={'color': COLORS['danger']}), {}, {}, {}
         
@@ -220,13 +238,13 @@ def update_graphs(selected_stock, time_range, n):
                        style={'color': COLORS['success']}), price_fig, volume_fig, change_fig
                        
     except Exception as e:
-        print(f"Error updating graphs: {str(e)}")
+        logger.error(f"Error updating graphs: {str(e)}")
         return html.Div(f"Error: {str(e)}", 
                        style={'color': COLORS['danger']}), {}, {}, {}
 
 if __name__ == '__main__':
     app.run_server(
         host='0.0.0.0',
-        port=8050,
+        port=int(os.getenv('PORT', 8050)),
         debug=False
     ) 
