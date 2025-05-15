@@ -2,6 +2,7 @@ version: '3.8'
 
 x-airflow-common: &airflow-common
   image: apache/airflow:2.7.1
+  user: "${AIRFLOW_UID:-50000}:0"
   environment: &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
@@ -95,24 +96,21 @@ services:
   airflow-init:
     <<: *airflow-common
     container_name: airflow_init
-    entrypoint: /bin/bash
-    command: |
-      -c "
-      mkdir -p /opt/airflow/logs /opt/airflow/dags /opt/airflow/plugins &&
-      chown -R 50000:0 /opt/airflow &&
-      chmod -R g+rw /opt/airflow &&
+    command: version
+    entrypoint: >
+      /bin/bash -c "
       airflow db init &&
       airflow users create \
-          --username admin \
-          --password admin \
-          --firstname Admin \
-          --lastname User \
-          --role Admin \
-          --email admin@example.com &&
+        --username admin \
+        --password admin \
+        --firstname Admin \
+        --lastname User \
+        --role Admin \
+        --email admin@example.com &&
       airflow connections add spark_default \
-          --conn-type spark \
-          --conn-host spark://spark-master \
-          --conn-port 7087
+        --conn-type spark \
+        --conn-host spark://spark-master \
+        --conn-port 7087
       "
 
   airflow-webserver:
