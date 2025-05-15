@@ -23,8 +23,8 @@ services:
   spark-master:
     image: bitnami/spark:latest
     ports:
-      - "8080:8080"
-      - "7077:7077"
+      - "8089:8080"
+      - "7087:7077"
     environment:
       - SPARK_MODE=master
       - SPARK_EXTRA_OPTS=--packages org.postgresql:postgresql:42.2.18,org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.2
