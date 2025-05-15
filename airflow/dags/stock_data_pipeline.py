@@ -28,8 +28,9 @@ process_stock_data = SparkSubmitOperator(
     application='/opt/airflow/spark/process_stock_data.py',
     conn_id='spark_default',
     conf={
-        'spark.master': 'spark://spark-master:7077',
-        'spark.submit.deployMode': 'client'
+        'spark.master': 'spark://spark-master:7087',
+        'spark.submit.deployMode': 'client',
+        'spark.driver.host': 'spark-master'
     },
     packages='org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.2,org.postgresql:postgresql:42.2.18',
     dag=dag
