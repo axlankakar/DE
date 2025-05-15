@@ -70,7 +70,8 @@ services:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
-    user: "0:0"  # Run as root temporarily
+      _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:- apache-airflow-providers-apache-spark>=4.1.0}
+    user: "0:0"
     volumes:
       - ./airflow:/opt/airflow
     command: bash -c "
@@ -88,14 +89,15 @@ services:
         condition: service_completed_successfully
       postgres:
         condition: service_healthy
-    ports:
-      - "8081:8080"
     environment:
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__WEBSERVER__BASE_URL=http://localhost:8081
       - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=true
+      - _PIP_ADDITIONAL_REQUIREMENTS=${_PIP_ADDITIONAL_REQUIREMENTS:- apache-airflow-providers-apache-spark>=4.1.0}
+    ports:
+      - "8081:8080"
     volumes:
       - ./airflow:/opt/airflow
     command: airflow webserver
@@ -113,6 +115,7 @@ services:
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - _PIP_ADDITIONAL_REQUIREMENTS=${_PIP_ADDITIONAL_REQUIREMENTS:- apache-airflow-providers-apache-spark>=4.1.0}
     volumes:
       - ./airflow:/opt/airflow
     command: airflow scheduler
@@ -137,6 +140,8 @@ services:
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
       - POSTGRES_DB=stockdata
+      - HOST=0.0.0.0
+      - PORT=8050
     depends_on:
       postgres:
         condition: service_healthy
