@@ -100,7 +100,7 @@ services:
     container_name: airflow_init
     entrypoint: >
       /bin/bash -c '
-      pip install apache-airflow-providers-apache-spark>=4.1.0 apache-airflow-providers-apache>=2.1.0 &&
+      python -m pip install --user apache-airflow-providers-apache-spark apache-airflow-providers-apache &&
       airflow db init &&
       airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com || true &&
       airflow connections delete spark_default || true &&
