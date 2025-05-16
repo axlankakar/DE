@@ -9,7 +9,9 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
     AIRFLOW__WEBSERVER__SECRET_KEY: "your-secret-key-here"
-    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:- apache-airflow-providers-apache-spark>=4.1.0 kafka-python>=2.0.2}
+    AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
+    AIRFLOW__WEBSERVER__WORKERS: "4"
+    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:- apache-airflow-providers-apache-spark>=4.1.0 apache-airflow-providers-apache>=2.1.0 kafka-python>=2.0.2}
   volumes:
     - ./airflow:/opt/airflow
     - ./data_generator:/opt/airflow/data_generator
@@ -114,9 +116,10 @@ services:
       - "8081:8080"
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 30s
+      interval: 10s
+      timeout: 10s
       retries: 5
+      start_period: 30s
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
@@ -155,6 +158,12 @@ services:
       - POSTGRES_DB=stockdata
       - HOST=0.0.0.0
       - PORT=8050
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8050/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     depends_on:
       postgres:
         condition: service_healthy
