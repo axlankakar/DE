@@ -98,9 +98,11 @@ services:
   airflow-init:
     <<: *airflow-common
     container_name: airflow_init
+    environment:
+      <<: *airflow-common-env
+      _PIP_ADDITIONAL_REQUIREMENTS: apache-airflow-providers-apache-spark apache-airflow-providers-apache kafka-python
     entrypoint: >
       /bin/bash -c '
-      python -m pip install --user apache-airflow-providers-apache-spark apache-airflow-providers-apache &&
       airflow db init &&
       airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com || true &&
       airflow connections delete spark_default || true &&
